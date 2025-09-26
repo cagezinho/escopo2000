@@ -38,7 +38,14 @@ const CONFIG = {
         ENABLED: true, // Ativar exportação automática
         SAVE_TO_LOCAL_STORAGE: true, // Salvar dados no localStorage para exportação posterior
         INCLUDE_METADATA: true, // Incluir metadados da análise
-        COMPRESS_DATA: false // Comprimir dados JSON (para sites grandes)
+        COMPRESS_DATA: false, // Comprimir dados JSON (para sites grandes)
+        
+        // Configurações de download
+        CUSTOM_DOWNLOAD_FOLDER: true, // Usar pasta personalizada
+        DOWNLOAD_FOLDER: "C:/Users/nicol/Desktop/EscopoSEO_Reports/", // Pasta específica
+        CREATE_SUBFOLDERS: true, // Criar subpastas por data
+        FILENAME_PREFIX: "EscopoSEO", // Prefixo dos arquivos
+        INCLUDE_TIMESTAMP: true // Incluir data no nome do arquivo
     }
 };
 
@@ -714,6 +721,11 @@ function exportAnalysisToCSV() {
     downloadCSV(aiOpportunitiesCSV, `EscopoSEO_Oportunidades_IA_${getCurrentDateString()}.csv`);
     
     console.log("✅ Exportação concluída! 3 arquivos CSV baixados.");
+    
+    // Gerar script de organização se pasta personalizada configurada
+    if (CONFIG.AUTO_EXPORT.CUSTOM_DOWNLOAD_FOLDER) {
+        generateMoveScript();
+    }
 }
 
 function generateSummaryCSV(storedData) {
@@ -926,15 +938,51 @@ function downloadCSV(csvContent, filename) {
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     
+    // Aplicar configurações de download personalizadas
+    const finalFilename = applyDownloadSettings(filename);
+    
     link.setAttribute("href", url);
-    link.setAttribute("download", filename);
+    link.setAttribute("download", finalFilename);
     link.style.visibility = 'hidden';
+    
+    // Tentar definir pasta de download (limitado pelo navegador)
+    if (CONFIG.AUTO_EXPORT.CUSTOM_DOWNLOAD_FOLDER) {
+        logDownloadInfo(finalFilename, CONFIG.AUTO_EXPORT.DOWNLOAD_FOLDER);
+    }
     
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     
     URL.revokeObjectURL(url);
+}
+
+function applyDownloadSettings(originalFilename) {
+    const config = CONFIG.AUTO_EXPORT;
+    let filename = originalFilename;
+    
+    // Aplicar prefixo personalizado
+    if (config.FILENAME_PREFIX && config.FILENAME_PREFIX !== "EscopoSEO") {
+        filename = filename.replace("EscopoSEO", config.FILENAME_PREFIX);
+    }
+    
+    // Adicionar subfolder por data se configurado
+    if (config.CREATE_SUBFOLDERS) {
+        const dateFolder = getCurrentDateString();
+        // Navegador não permite criar pastas, mas podemos incluir no nome
+        filename = `${dateFolder}_${filename}`;
+    }
+    
+    return filename;
+}
+
+function logDownloadInfo(filename, folder) {
+    console.log(`📁 Configuração de Download:`);
+    console.log(`   Arquivo: ${filename}`);
+    console.log(`   Pasta desejada: ${folder}`);
+    console.log(`⚠️  NOTA: O navegador baixará na pasta padrão de Downloads.`);
+    console.log(`   Para usar pasta personalizada, mova os arquivos após download.`);
+    console.log(`   Ou configure seu navegador para sempre perguntar onde salvar.`);
 }
 
 function formatDateForCSV(isoString) {
@@ -944,6 +992,68 @@ function formatDateForCSV(isoString) {
 
 function getCurrentDateString() {
     return new Date().toISOString().split('T')[0];
+}
+
+function generateMoveScript() {
+    const config = CONFIG.AUTO_EXPORT;
+    const dateStr = getCurrentDateString();
+    const downloadFolder = "C:\\Users\\nicol\\Downloads\\"; // Pasta padrão do Windows
+    const targetFolder = config.DOWNLOAD_FOLDER.replace(/\//g, '\\');
+    
+    // Script batch para Windows
+    const batchScript = `@echo off
+echo 🚀 EscopoSEO - Organizador de Arquivos CSV
+echo.
+echo Movendo arquivos de análise para pasta personalizada...
+echo.
+
+REM Criar pasta de destino se não existir
+if not exist "${targetFolder}" (
+    mkdir "${targetFolder}"
+    echo ✅ Pasta criada: ${targetFolder}
+)
+
+REM Criar subpasta por data se configurado
+${config.CREATE_SUBFOLDERS ? `
+if not exist "${targetFolder}${dateStr}\\" (
+    mkdir "${targetFolder}${dateStr}\\"
+    echo ✅ Subpasta criada: ${targetFolder}${dateStr}\\
+)
+set TARGET_DIR=${targetFolder}${dateStr}\\
+` : `set TARGET_DIR=${targetFolder}`}
+
+REM Mover arquivos EscopoSEO
+echo.
+echo Movendo arquivos...
+move "${downloadFolder}${config.CREATE_SUBFOLDERS ? dateStr + '_' : ''}EscopoSEO_*.csv" "%TARGET_DIR%" 2>nul
+if errorlevel 1 (
+    echo ⚠️  Nenhum arquivo EscopoSEO encontrado em Downloads
+) else (
+    echo ✅ Arquivos movidos com sucesso!
+)
+
+echo.
+echo 📁 Arquivos organizados em: %TARGET_DIR%
+echo.
+pause`;
+
+    // Fazer download do script batch
+    const blob = new Blob([batchScript], { type: 'text/plain;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute("href", url);
+    link.setAttribute("download", `EscopoSEO_Organizar_Arquivos_${dateStr}.bat`);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    URL.revokeObjectURL(url);
+    
+    console.log(`📜 Script batch gerado: EscopoSEO_Organizar_Arquivos_${dateStr}.bat`);
+    console.log(`💡 Execute este arquivo .bat para mover os CSV para a pasta configurada.`);
 }
 
 // =============================================================================
