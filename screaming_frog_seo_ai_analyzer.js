@@ -1077,6 +1077,73 @@ window.getAnalysisStats = function() {
     return data.length;
 };
 
+// Função de teste para verificar exportação (sem precisar do crawl)
+window.testarExportacao = function() {
+    console.log("🧪 Testando exportação CSV com dados de exemplo...");
+    
+    // Criar dados de teste
+    const testData = [
+        {
+            url: "https://exemplo.com/produto-1",
+            timestamp: new Date().toISOString(),
+            analysis: JSON.stringify({
+                url_analisada: "https://exemplo.com/produto-1",
+                seo_tecnico: [
+                    "Meta description muito curta (45 chars) - expandir para 150-160",
+                    "3 imagens sem ALT text - adicionar para acessibilidade"
+                ],
+                seo_conteudo: [
+                    "Conteúdo superficial (287 palavras) - expandir para 800+",
+                    "H1 genérico - tornar mais específico com palavra-chave"
+                ],
+                seo_ia_sge: [
+                    "Página não responde perguntas diretas - adicionar FAQ",
+                    "Alto potencial para featured snippet com tabela de especificações"
+                ],
+                prioridade_geral: "Alta",
+                score_seo: 65,
+                score_conteudo: 42,
+                score_ia: 48,
+                resumo_executivo: "Produto com base técnica sólida mas conteúdo insuficiente para IA"
+            })
+        },
+        {
+            url: "https://exemplo.com/categoria-smartphones",
+            timestamp: new Date().toISOString(),
+            analysis: JSON.stringify({
+                url_analisada: "https://exemplo.com/categoria-smartphones",
+                seo_tecnico: [
+                    "Canonical correto implementado - mantém consistência",
+                    "Faltando paginação schema - implementar para listas grandes"
+                ],
+                seo_conteudo: [
+                    "Títulos de produtos bem estruturados",
+                    "Faltando descrição da categoria (apenas 156 palavras)"
+                ],
+                seo_ia_sge: [
+                    "Excelente estrutura para comparação de produtos",
+                    "Implementar FAQ sobre diferenças entre modelos"
+                ],
+                prioridade_geral: "Média",
+                score_seo: 78,
+                score_conteudo: 68,
+                score_ia: 72,
+                resumo_executivo: "Categoria bem estruturada, pequenos ajustes necessários"
+            })
+        }
+    ];
+    
+    // Simular armazenamento
+    localStorage.setItem('escopoSEO_analysis_data', JSON.stringify(testData));
+    localStorage.setItem('escopoSEO_last_update', new Date().toISOString());
+    
+    console.log("✅ Dados de teste criados!");
+    console.log("📊 Execute agora: exportAnalysisToCSV()");
+    console.log("🎯 Resultado: 4 arquivos baixados (3 CSV + 1 BAT)");
+    
+    return testData.length;
+};
+
 // Modificar a função analyzeWithGemini para incluir armazenamento
 const originalAnalyzeWithGemini = analyzeWithGemini;
 analyzeWithGemini = function(htmlContent, pageData) {
