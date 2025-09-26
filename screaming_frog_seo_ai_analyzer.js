@@ -22,7 +22,7 @@ const CONFIG = {
     GEMINI_API_KEY: "SUA_CHAVE_GEMINI_AQUI", // Substitua pela sua chave real
     
     // Configurações da API
-    GEMINI_MODEL: "gemini-1.5-flash", // ou "gemini-1.5-pro" para análises mais profundas
+    GEMINI_MODEL: "gemini-2.0-flash", // ou "gemini-1.5-pro" para análises mais profundas
     GEMINI_ENDPOINT: "https://generativelanguage.googleapis.com/v1beta/models/",
     
     // Configurações de análise
