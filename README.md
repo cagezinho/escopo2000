@@ -93,15 +93,14 @@ https://makersuite.google.com/app/apikey
 
 ## 📁 Arquivos do Projeto
 
-### 🔧 **Arquivos Principais**
-- `screaming_frog_seo_ai_analyzer.js` - Script principal com exportação automática
+### 🔧 **Arquivo Principal**
+- `screaming_frog_seo_ai_analyzer.js` - **ÚNICO arquivo necessário** (análise IA + exportação CSV integrada)
+
+### 📚 **Documentação**
 - `GUIA_SCREAMING_FROG_SETUP.md` - Guia completo de instalação
 - `GUIA_EXPORTACAO_CSV.md` - Como exportar resultados para planilhas
 - `EXEMPLO_PRATICO.md` - Caso real com antes/depois
-
-### 📚 **Documentação Avançada**
 - `prompt_otimizado_gemini.md` - Prompts especializados (e-commerce, blog, B2B)
-- `export_csv_analyzer.js` - Processador avançado de CSV (opcional)
 - `README.md` - Este arquivo
 
 ## 🎯 Casos de Uso Poderosos

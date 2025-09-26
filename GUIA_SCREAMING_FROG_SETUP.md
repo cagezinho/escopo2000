@@ -48,6 +48,8 @@ Transforma o Screaming Frog em uma **ferramenta de análise SEO+IA extremamente 
    - **JavaScript:** Cole todo o conteúdo do arquivo `screaming_frog_seo_ai_analyzer.js`
 5. **Clique:** `OK` para salvar
 
+**⚡ IMPORTANTE:** Você precisa apenas deste 1 arquivo! A exportação CSV já está integrada.
+
 ### Passo 3: Configurar Extração
 
 1. **Ainda em Custom Extraction**
