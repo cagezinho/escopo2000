@@ -5,11 +5,11 @@
  */
 
 class Database {
-    // Configurações padrão para hospedagem compartilhada
+    // Configurações para sua hospedagem compartilhada
     private $host = 'localhost';
-    private $database = 'cpses_ni6r40g1n6_escopo'; // Nome típico em hospedagem compartilhada
-    private $username = 'cpses_ni6r40g1n6';        // Seu usuário atual
-    private $password = '';                         // Sua senha
+    private $database = 'nicol674_escopo';         // Seu banco de dados
+    private $username = 'nicol674_escopo';         // Seu usuário
+    private $password = 'tzwg50$xprWm';            // Sua senha
     private $charset = 'utf8mb4';
     private $pdo = null;
     

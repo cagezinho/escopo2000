@@ -3,9 +3,9 @@
 -- VERSÃO PARA HOSPEDAGEM COMPARTILHADA (sem CREATE DATABASE)
 
 -- Use este arquivo quando o banco já estiver criado pelo painel de controle
--- Substitua 'escopo_seo' pelo nome do seu banco se for diferente
+-- Configurado para o banco: nicol674_escopo
 
-USE escopo_seo;
+USE nicol674_escopo;
 
 -- Tabela de análises
 CREATE TABLE IF NOT EXISTS `analyses` (

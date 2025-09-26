@@ -1,11 +1,11 @@
 # Configurações para Hospedagem Compartilhada - EscopoSEO
 
 # Configurações do Banco de Dados
-# IMPORTANTE: Ajuste estes valores conforme sua hospedagem
+# Configurações para nicol674_escopo
 DB_HOST=localhost
-DB_DATABASE=cpses_ni6r40g1n6_escopo
-DB_USERNAME=cpses_ni6r40g1n6
-DB_PASSWORD=SUA_SENHA_AQUI
+DB_DATABASE=nicol674_escopo
+DB_USERNAME=nicol674_escopo
+DB_PASSWORD=tzwg50$xprWm
 
 # Configurações da Aplicação
 APP_NAME="EscopoSEO"
