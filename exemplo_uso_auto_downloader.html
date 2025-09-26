@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exemplo - EscopoSEO Auto Downloader</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .escopo-data {
+            background: #e8f5e8;
+            padding: 15px;
+            border-left: 4px solid #4CAF50;
+            margin: 10px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .btn {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #45a049;
+        }
+        .btn-secondary {
+            background: #2196F3;
+        }
+        .btn-secondary:hover {
+            background: #1976D2;
+        }
+        .log {
+            background: #f8f8f8;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 EscopoSEO Auto Downloader - Exemplo Prático</h1>
+        <p>Esta página simula dados do EscopoSEO para testar o auto downloader.</p>
+        
+        <div class="status info">
+            <strong>📋 Status:</strong> <span id="status">Aguardando carregamento do script...</span>
+        </div>
+
+        <div>
+            <button class="btn" onclick="carregarScript()">📥 Carregar Script</button>
+            <button class="btn btn-secondary" onclick="executarDownload()">⬇️ Executar Download</button>
+            <button class="btn btn-secondary" onclick="configurarScript()">⚙️ Configurar</button>
+            <button class="btn btn-secondary" onclick="verificarDeteccao()">🔍 Verificar Detecção</button>
+            <button class="btn btn-secondary" onclick="limparLogs()">🧹 Limpar Logs</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>📊 Dados de Exemplo do EscopoSEO</h2>
+        
+        <!-- Dados no formato localStorage (simulados) -->
+        <div class="escopo-data" data-escopo='{"url":"https://exemplo.com/pagina1","score":85,"recommendations":["Otimizar meta description","Adicionar schema FAQ"],"analysis_date":"2024-01-15"}'>
+            <strong>💾 Dados localStorage:</strong> Análise da página principal (Score: 85)
+        </div>
+
+        <div class="escopo-data" data-seo-analysis='{"url":"https://exemplo.com/blog","score":92,"recommendations":["Melhorar velocidade"],"gemini_response":"Página otimizada para SEO"}'>
+            <strong>🤖 Análise Gemini:</strong> Página do blog (Score: 92)
+        </div>
+
+        <!-- Tabela com dados de múltiplas páginas -->
+        <table id="seo-results">
+            <thead>
+                <tr>
+                    <th>URL</th>
+                    <th>Título</th>
+                    <th>Score SEO</th>
+                    <th>Status</th>
+                    <th>Recomendações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>https://exemplo.com/</td>
+                    <td>Página Principal - Exemplo</td>
+                    <td>85</td>
+                    <td>✅ Otimizada</td>
+                    <td>Adicionar FAQ schema, otimizar imagens</td>
+                </tr>
+                <tr>
+                    <td>https://exemplo.com/sobre</td>
+                    <td>Sobre Nós - Exemplo</td>
+                    <td>78</td>
+                    <td>⚠️ Melhorar</td>
+                    <td>Melhorar meta description, adicionar breadcrumbs</td>
+                </tr>
+                <tr>
+                    <td>https://exemplo.com/blog</td>
+                    <td>Blog - Exemplo</td>
+                    <td>92</td>
+                    <td>✅ Excelente</td>
+                    <td>Implementar schema Article</td>
+                </tr>
+                <tr>
+                    <td>https://exemplo.com/contato</td>
+                    <td>Contato - Exemplo</td>
+                    <td>71</td>
+                    <td>⚠️ Melhorar</td>
+                    <td>Adicionar LocalBusiness schema, otimizar formulário</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="container">
+        <h2>📱 Painel de Controle</h2>
+        
+        <div>
+            <h3>⚙️ Configurações Atuais</h3>
+            <div id="config-display" class="log">Carregue o script para ver as configurações</div>
+        </div>
+
+        <div>
+            <h3>📄 Logs do Sistema</h3>
+            <div id="logs" class="log">Logs aparecerão aqui...</div>
+        </div>
+    </div>
+
+    <script>
+        // Simula dados no localStorage
+        function simularDadosLocalStorage() {
+            const dadosEscopo = {
+                'escopo_analysis_2024': {
+                    domain: 'exemplo.com',
+                    pages: [
+                        {
+                            url: 'https://exemplo.com/',
+                            title: 'Página Principal',
+                            score: 85,
+                            analysis: 'Página bem otimizada, mas pode melhorar'
+                        },
+                        {
+                            url: 'https://exemplo.com/blog',
+                            title: 'Blog',
+                            score: 92,
+                            analysis: 'Excelente otimização SEO'
+                        }
+                    ]
+                },
+                'seo_spider_results': {
+                    crawl_date: '2024-01-15',
+                    total_pages: 25,
+                    avg_score: 83
+                }
+            };
+
+            Object.entries(dadosEscopo).forEach(([key, value]) => {
+                localStorage.setItem(key, JSON.stringify(value));
+            });
+
+            adicionarLog('✅ Dados simulados salvos no localStorage');
+        }
+
+        // Carrega o script do auto downloader
+        function carregarScript() {
+            adicionarLog('📥 Carregando script...');
+            
+            fetch('escopo_auto_downloader.js')
+                .then(response => response.text())
+                .then(scriptContent => {
+                    // Executa o script
+                    eval(scriptContent);
+                    
+                    // Simula dados
+                    simularDadosLocalStorage();
+                    
+                    document.getElementById('status').textContent = 'Script carregado com sucesso!';
+                    document.getElementById('status').parentElement.className = 'status success';
+                    
+                    atualizarConfigDisplay();
+                    adicionarLog('✅ Script carregado e dados simulados!');
+                })
+                .catch(error => {
+                    adicionarLog('❌ Erro ao carregar script: ' + error.message);
+                    document.getElementById('status').textContent = 'Erro ao carregar script';
+                    document.getElementById('status').parentElement.className = 'status error';
+                });
+        }
+
+        // Executa download manual
+        async function executarDownload() {
+            if (typeof downloadEscopoData === 'undefined') {
+                adicionarLog('❌ Script não carregado. Carregue primeiro!');
+                return;
+            }
+
+            adicionarLog('⬇️ Executando download...');
+            
+            try {
+                const resultado = await downloadEscopoData();
+                adicionarLog('✅ Download executado!');
+                adicionarLog(JSON.stringify(resultado, null, 2));
+            } catch (error) {
+                adicionarLog('❌ Erro no download: ' + error.message);
+            }
+        }
+
+        // Configura o script
+        function configurarScript() {
+            if (typeof configureEscopo === 'undefined') {
+                adicionarLog('❌ Script não carregado. Carregue primeiro!');
+                return;
+            }
+
+            const novaConfig = {
+                AUTO_DOWNLOAD: false,
+                DEBUG: true,
+                FILENAME_PREFIX: 'ExemploEscopo',
+                INCLUDE_TIMESTAMP: true
+            };
+
+            configureEscopo(novaConfig);
+            atualizarConfigDisplay();
+            adicionarLog('⚙️ Configurações atualizadas!');
+        }
+
+        // Verifica detecção
+        function verificarDeteccao() {
+            if (typeof EscopoUtils === 'undefined') {
+                adicionarLog('❌ Script não carregado. Carregue primeiro!');
+                return;
+            }
+
+            adicionarLog('🔍 Verificando detecção...');
+            
+            const isEscopoPage = EscopoUtils.detector.isEscopoPage();
+            const hasLocalStorage = EscopoUtils.detector.detectLocalStorageData();
+            const hasDOMData = EscopoUtils.detector.detectDOMData();
+            
+            adicionarLog(`📊 Resultados da detecção:
+- Página EscopoSEO: ${isEscopoPage ? '✅' : '❌'}
+- Dados localStorage: ${hasLocalStorage ? '✅' : '❌'}
+- Dados DOM: ${hasDOMData ? '✅' : '❌'}`);
+
+            // Mostra dados extraídos
+            const dados = EscopoUtils.extractor.extractAllData();
+            adicionarLog('📄 Dados extraídos:');
+            adicionarLog(JSON.stringify(dados, null, 2));
+        }
+
+        // Atualiza display de configurações
+        function atualizarConfigDisplay() {
+            if (typeof EscopoAutoDownloader !== 'undefined') {
+                const config = EscopoAutoDownloader.getConfig();
+                document.getElementById('config-display').textContent = JSON.stringify(config, null, 2);
+            }
+        }
+
+        // Adiciona log
+        function adicionarLog(mensagem) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logElement = document.getElementById('logs');
+            logElement.textContent += `[${timestamp}] ${mensagem}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        // Limpa logs
+        function limparLogs() {
+            document.getElementById('logs').textContent = '';
+            adicionarLog('🧹 Logs limpos');
+        }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            adicionarLog('🚀 Página de exemplo carregada');
+            adicionarLog('📋 Esta página simula dados do EscopoSEO');
+            adicionarLog('💡 Clique em "Carregar Script" para começar');
+        });
+    </script>
+</body>
+</html>
