@@ -94,12 +94,14 @@ https://makersuite.google.com/app/apikey
 ## 📁 Arquivos do Projeto
 
 ### 🔧 **Arquivos Principais**
-- `screaming_frog_seo_ai_analyzer.js` - Script principal
+- `screaming_frog_seo_ai_analyzer.js` - Script principal com exportação automática
 - `GUIA_SCREAMING_FROG_SETUP.md` - Guia completo de instalação
+- `GUIA_EXPORTACAO_CSV.md` - Como exportar resultados para planilhas
 - `EXEMPLO_PRATICO.md` - Caso real com antes/depois
 
 ### 📚 **Documentação Avançada**
 - `prompt_otimizado_gemini.md` - Prompts especializados (e-commerce, blog, B2B)
+- `export_csv_analyzer.js` - Processador avançado de CSV (opcional)
 - `README.md` - Este arquivo
 
 ## 🎯 Casos de Uso Poderosos
@@ -189,9 +191,34 @@ https://makersuite.google.com/app/apikey
 ### **3. Análise Completa (1 hora)**
 ```bash
 # 1. Crawl site completo
-# 2. Exportar resultados
-# 3. Priorizar por scores
-# 4. Criar plano de ação
+# 2. Aguardar conclusão
+# 3. Executar: exportAnalysisToCSV()
+# 4. Abrir 3 planilhas CSV geradas
+# 5. Priorizar ações por scores
+```
+
+## 📊 Exportação Automática para CSV
+
+### **🎯 Funcionalidade Revolucionária:**
+- ✅ **Coleta automática** durante o crawl
+- ✅ **3 planilhas organizadas** geradas automaticamente
+- ✅ **Zero configuração** adicional
+- ✅ **Dados prontos** para Excel/Google Sheets
+
+### **📄 Planilhas Geradas:**
+1. **Resumo Geral** - Visão consolidada com scores
+2. **Issues Detalhados** - Todos os problemas categorizados  
+3. **Oportunidades IA** - Foco em otimização para SGE
+
+### **💡 Como Exportar:**
+```javascript
+// No console do Screaming Frog após o crawl:
+exportAnalysisToCSV()
+
+// 3 arquivos baixados automaticamente:
+// EscopoSEO_Resumo_2024-01-15.csv
+// EscopoSEO_Issues_Detalhados_2024-01-15.csv  
+// EscopoSEO_Oportunidades_IA_2024-01-15.csv
 ```
 
 ## 📞 Suporte e Troubleshooting

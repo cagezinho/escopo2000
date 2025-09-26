@@ -31,7 +31,15 @@ const CONFIG = {
     RETRY_ATTEMPTS: 2, // Tentativas em caso de erro
     
     // Debug (ative para ver logs no console do SF)
-    DEBUG_MODE: true
+    DEBUG_MODE: true,
+    
+    // Configurações de exportação automática
+    AUTO_EXPORT: {
+        ENABLED: true, // Ativar exportação automática
+        SAVE_TO_LOCAL_STORAGE: true, // Salvar dados no localStorage para exportação posterior
+        INCLUDE_METADATA: true, // Incluir metadados da análise
+        COMPRESS_DATA: false // Comprimir dados JSON (para sites grandes)
+    }
 };
 
 // =============================================================================
@@ -617,7 +625,362 @@ logDebug("EscopoSEO Custom JavaScript inicializado", {
     max_content: CONFIG.MAX_CONTENT_LENGTH
 });
 
+// =============================================================================
+// SISTEMA DE COLETA E EXPORTAÇÃO DE DADOS
+// =============================================================================
+
+// Armazenar dados da análise para exportação posterior
+function storeAnalysisData(analysisResult, pageData) {
+    if (!CONFIG.AUTO_EXPORT.ENABLED) return;
+    
+    try {
+        const storedData = getStoredAnalysisData();
+        const analysisEntry = {
+            url: pageData.url,
+            timestamp: new Date().toISOString(),
+            analysis: analysisResult,
+            pageData: CONFIG.AUTO_EXPORT.INCLUDE_METADATA ? pageData : null
+        };
+        
+        storedData.push(analysisEntry);
+        
+        // Salvar no localStorage
+        if (CONFIG.AUTO_EXPORT.SAVE_TO_LOCAL_STORAGE) {
+            const dataToStore = CONFIG.AUTO_EXPORT.COMPRESS_DATA ? 
+                LZString.compress(JSON.stringify(storedData)) : 
+                JSON.stringify(storedData);
+            
+            localStorage.setItem('escopoSEO_analysis_data', dataToStore);
+            localStorage.setItem('escopoSEO_last_update', new Date().toISOString());
+        }
+        
+        logDebug(`Dados armazenados para: ${pageData.url} (Total: ${storedData.length} páginas)`);
+        
+        // Trigger automático de exportação a cada 50 páginas
+        if (storedData.length % 50 === 0) {
+            triggerProgressExport(storedData.length);
+        }
+        
+    } catch (error) {
+        logError("Erro ao armazenar dados:", error);
+    }
+}
+
+function getStoredAnalysisData() {
+    try {
+        const stored = localStorage.getItem('escopoSEO_analysis_data');
+        if (!stored) return [];
+        
+        const data = CONFIG.AUTO_EXPORT.COMPRESS_DATA ? 
+            JSON.parse(LZString.decompress(stored)) : 
+            JSON.parse(stored);
+            
+        return Array.isArray(data) ? data : [];
+    } catch (error) {
+        logError("Erro ao recuperar dados armazenados:", error);
+        return [];
+    }
+}
+
+function triggerProgressExport(pageCount) {
+    console.log(`🔄 EscopoSEO: ${pageCount} páginas analisadas. Dados prontos para exportação.`);
+    console.log("💡 Para exportar agora, execute: exportAnalysisToCSV()");
+}
+
+// =============================================================================
+// FUNÇÕES DE EXPORTAÇÃO MANUAL
+// =============================================================================
+
+function exportAnalysisToCSV() {
+    const storedData = getStoredAnalysisData();
+    
+    if (storedData.length === 0) {
+        console.log("❌ Nenhum dado de análise encontrado para exportar.");
+        return;
+    }
+    
+    console.log(`📊 Exportando ${storedData.length} análises para CSV...`);
+    
+    // Gerar CSV de resumo
+    const summaryCSV = generateSummaryCSV(storedData);
+    downloadCSV(summaryCSV, `EscopoSEO_Resumo_${getCurrentDateString()}.csv`);
+    
+    // Gerar CSV de issues detalhados
+    const issuesCSV = generateIssuesCSV(storedData);
+    downloadCSV(issuesCSV, `EscopoSEO_Issues_Detalhados_${getCurrentDateString()}.csv`);
+    
+    // Gerar CSV de oportunidades IA
+    const aiOpportunitiesCSV = generateAIOpportunitiesCSV(storedData);
+    downloadCSV(aiOpportunitiesCSV, `EscopoSEO_Oportunidades_IA_${getCurrentDateString()}.csv`);
+    
+    console.log("✅ Exportação concluída! 3 arquivos CSV baixados.");
+}
+
+function generateSummaryCSV(storedData) {
+    const headers = [
+        "URL",
+        "Data da Análise", 
+        "Prioridade",
+        "Score SEO",
+        "Score Conteúdo",
+        "Score IA",
+        "Score Médio",
+        "Total de Issues",
+        "Issues SEO Técnico",
+        "Issues Conteúdo",
+        "Issues IA/SGE",
+        "Resumo Executivo"
+    ];
+    
+    const rows = [headers];
+    
+    storedData.forEach(entry => {
+        try {
+            const analysis = typeof entry.analysis === 'string' ? 
+                JSON.parse(entry.analysis) : entry.analysis;
+            
+            if (!analysis || analysis.erro) return;
+            
+            const seoIssues = (analysis.seo_tecnico || []).length;
+            const contentIssues = (analysis.seo_conteudo || []).length;  
+            const aiIssues = (analysis.seo_ia_sge || []).length;
+            const totalIssues = seoIssues + contentIssues + aiIssues;
+            
+            const avgScore = Math.round(((analysis.score_seo || 0) + 
+                                       (analysis.score_conteudo || 0) + 
+                                       (analysis.score_ia || 0)) / 3);
+            
+            rows.push([
+                `"${analysis.url_analisada || entry.url}"`,
+                formatDateForCSV(entry.timestamp),
+                analysis.prioridade_geral || "Não definida",
+                analysis.score_seo || 0,
+                analysis.score_conteudo || 0,
+                analysis.score_ia || 0,
+                avgScore,
+                totalIssues,
+                seoIssues,
+                contentIssues,
+                aiIssues,
+                `"${(analysis.resumo_executivo || "").replace(/"/g, '""')}"`
+            ]);
+        } catch (error) {
+            logError("Erro ao processar entrada para CSV:", error);
+        }
+    });
+    
+    return rows.map(row => row.join(",")).join("\n");
+}
+
+function generateIssuesCSV(storedData) {
+    const headers = [
+        "URL",
+        "Data da Análise",
+        "Categoria", 
+        "Problema/Oportunidade",
+        "Prioridade da Página",
+        "Score da Categoria"
+    ];
+    
+    const rows = [headers];
+    
+    storedData.forEach(entry => {
+        try {
+            const analysis = typeof entry.analysis === 'string' ? 
+                JSON.parse(entry.analysis) : entry.analysis;
+            
+            if (!analysis || analysis.erro) return;
+            
+            const url = analysis.url_analisada || entry.url;
+            const date = formatDateForCSV(entry.timestamp);
+            const priority = analysis.prioridade_geral || "Não definida";
+            
+            // Issues SEO Técnico
+            (analysis.seo_tecnico || []).forEach(issue => {
+                rows.push([
+                    `"${url}"`,
+                    date,
+                    "SEO Técnico",
+                    `"${issue.replace(/"/g, '""')}"`,
+                    priority,
+                    analysis.score_seo || 0
+                ]);
+            });
+            
+            // Issues Conteúdo
+            (analysis.seo_conteudo || []).forEach(issue => {
+                rows.push([
+                    `"${url}"`,
+                    date,
+                    "Conteúdo",
+                    `"${issue.replace(/"/g, '""')}"`,
+                    priority,
+                    analysis.score_conteudo || 0
+                ]);
+            });
+            
+            // Issues IA/SGE
+            (analysis.seo_ia_sge || []).forEach(issue => {
+                rows.push([
+                    `"${url}"`,
+                    date,
+                    "IA/SGE",
+                    `"${issue.replace(/"/g, '""')}"`,
+                    priority,
+                    analysis.score_ia || 0
+                ]);
+            });
+            
+        } catch (error) {
+            logError("Erro ao processar issues para CSV:", error);
+        }
+    });
+    
+    return rows.map(row => row.join(",")).join("\n");
+}
+
+function generateAIOpportunitiesCSV(storedData) {
+    const headers = [
+        "URL",
+        "Oportunidade IA/SGE",
+        "Tipo de Otimização",
+        "Prioridade",
+        "Score IA",
+        "Potencial Featured Snippet",
+        "Ação Recomendada"
+    ];
+    
+    const rows = [headers];
+    
+    storedData.forEach(entry => {
+        try {
+            const analysis = typeof entry.analysis === 'string' ? 
+                JSON.parse(entry.analysis) : entry.analysis;
+            
+            if (!analysis || analysis.erro) return;
+            
+            const url = analysis.url_analisada || entry.url;
+            
+            (analysis.seo_ia_sge || []).forEach(opportunity => {
+                const optimizationType = categorizeAIOptimization(opportunity);
+                const featuredSnippetPotential = hasFeaturedSnippetPotential(opportunity);
+                const recommendedAction = getRecommendedAIAction(opportunity);
+                
+                rows.push([
+                    `"${url}"`,
+                    `"${opportunity.replace(/"/g, '""')}"`,
+                    optimizationType,
+                    analysis.prioridade_geral || "Não definida",
+                    analysis.score_ia || 0,
+                    featuredSnippetPotential,
+                    `"${recommendedAction}"`
+                ]);
+            });
+            
+        } catch (error) {
+            logError("Erro ao processar oportunidades IA para CSV:", error);
+        }
+    });
+    
+    return rows.map(row => row.join(",")).join("\n");
+}
+
+// =============================================================================
+// FUNÇÕES AUXILIARES DE EXPORTAÇÃO
+// =============================================================================
+
+function categorizeAIOptimization(opportunity) {
+    const opp = opportunity.toLowerCase();
+    if (opp.includes('faq')) return "FAQ Schema";
+    if (opp.includes('tabela')) return "Tabela/Featured Snippet";
+    if (opp.includes('lista')) return "Lista Estruturada";
+    if (opp.includes('pergunta')) return "Formato Q&A";
+    if (opp.includes('comparação') || opp.includes('versus')) return "Comparativo";
+    if (opp.includes('passo') || opp.includes('tutorial')) return "HowTo Schema";
+    if (opp.includes('e-e-a-t')) return "Autoridade/Confiabilidade";
+    return "Otimização Geral";
+}
+
+function hasFeaturedSnippetPotential(opportunity) {
+    const opp = opportunity.toLowerCase();
+    const triggers = ['tabela', 'lista', 'passo', 'definição', 'o que é', 'como'];
+    return triggers.some(trigger => opp.includes(trigger)) ? "Alto" : "Médio";
+}
+
+function getRecommendedAIAction(opportunity) {
+    const opp = opportunity.toLowerCase();
+    if (opp.includes('faq')) return "Implementar schema FAQPage";
+    if (opp.includes('tabela')) return "Criar tabela comparativa";
+    if (opp.includes('lista')) return "Estruturar em bullet points";
+    if (opp.includes('pergunta')) return "Adicionar seção Q&A";
+    if (opp.includes('autor')) return "Incluir informações do autor";
+    if (opp.includes('data')) return "Adicionar datas de publicação/atualização";
+    return "Revisar e otimizar conteúdo para IA";
+}
+
+function downloadCSV(csvContent, filename) {
+    // Adicionar BOM para UTF-8
+    const BOM = "\uFEFF";
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+    
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute("href", url);
+    link.setAttribute("download", filename);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    URL.revokeObjectURL(url);
+}
+
+function formatDateForCSV(isoString) {
+    const date = new Date(isoString);
+    return date.toLocaleDateString('pt-BR') + " " + date.toLocaleTimeString('pt-BR');
+}
+
+function getCurrentDateString() {
+    return new Date().toISOString().split('T')[0];
+}
+
+// =============================================================================
+// COMANDOS DISPONÍVEIS NO CONSOLE
+// =============================================================================
+
+// Adicionar funções globais para uso no console do Screaming Frog
+window.exportAnalysisToCSV = exportAnalysisToCSV;
+window.clearStoredAnalysis = function() {
+    localStorage.removeItem('escopoSEO_analysis_data');
+    localStorage.removeItem('escopoSEO_last_update');
+    console.log("🗑️ Dados de análise limpos do armazenamento local.");
+};
+window.getAnalysisStats = function() {
+    const data = getStoredAnalysisData();
+    console.log(`📊 EscopoSEO Stats:
+- Total de páginas analisadas: ${data.length}
+- Última atualização: ${localStorage.getItem('escopoSEO_last_update') || 'Nunca'}
+- Para exportar: exportAnalysisToCSV()
+- Para limpar dados: clearStoredAnalysis()`);
+    return data.length;
+};
+
+// Modificar a função analyzeWithGemini para incluir armazenamento
+const originalAnalyzeWithGemini = analyzeWithGemini;
+analyzeWithGemini = function(htmlContent, pageData) {
+    const result = originalAnalyzeWithGemini(htmlContent, pageData);
+    
+    // Armazenar dados se a análise foi bem sucedida
+    if (CONFIG.AUTO_EXPORT.ENABLED && result && !result.includes('"erro"')) {
+        storeAnalysisData(result, pageData);
+    }
+    
+    return result;
+};
+
 // Export da função principal (necessário para o Screaming Frog)
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { extract };
+    module.exports = { extract, exportAnalysisToCSV, getStoredAnalysisData };
 }
