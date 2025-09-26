@@ -1,0 +1,38 @@
+# Configurações para Hospedagem Compartilhada - EscopoSEO
+
+# Configurações do Banco de Dados
+# IMPORTANTE: Ajuste estes valores conforme sua hospedagem
+DB_HOST=localhost
+DB_DATABASE=cpses_ni6r40g1n6_escopo
+DB_USERNAME=cpses_ni6r40g1n6
+DB_PASSWORD=SUA_SENHA_AQUI
+
+# Configurações da Aplicação
+APP_NAME="EscopoSEO"
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://seudominio.com
+
+# Configurações de Crawler
+CRAWLER_USER_AGENT="EscopoSEO Bot 1.0"
+CRAWLER_DELAY=2
+CRAWLER_TIMEOUT=30
+CRAWLER_MAX_REDIRECTS=5
+
+# Configurações de Limites (reduzidos para hospedagem compartilhada)
+MAX_PAGES_DEFAULT=50
+MAX_PAGES_LIMIT=200
+MAX_CONCURRENT_REQUESTS=2
+
+# Configurações de Cache
+CACHE_ENABLED=true
+CACHE_TTL=7200
+
+# Configurações de Log
+LOG_LEVEL=warning
+LOG_FILE=logs/app.log
+
+# Configurações de Performance (para hospedagem compartilhada)
+MEMORY_LIMIT=256M
+MAX_EXECUTION_TIME=120
+ENABLE_BACKGROUND_PROCESSING=false
