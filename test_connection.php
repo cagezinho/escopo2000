@@ -5,7 +5,7 @@
  */
 
 // Incluir configuração
-require_once 'config/database.php';
+require_once 'config/database_shared_hosting.php';
 
 // Headers
 header('Content-Type: text/html; charset=utf-8');

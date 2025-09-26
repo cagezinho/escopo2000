@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 }
 
 // Incluir dependências
-require_once '../config/database.php';
+require_once '../config/database_shared_hosting.php';
 
 try {
     // Verificar parâmetro analysis_id

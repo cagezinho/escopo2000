@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // Incluir dependências
-require_once '../config/database.php';
+require_once '../config/database_shared_hosting.php';
 require_once '../classes/Crawler.php';
 require_once '../classes/SEOAnalyzer.php';
 

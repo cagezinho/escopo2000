@@ -7,7 +7,7 @@
 // Se executado via linha de comando
 if (php_sapi_name() === 'cli' && isset($argv[1])) {
     $analysisId = intval($argv[1]);
-    require_once __DIR__ . '/../config/database.php';
+    require_once __DIR__ . '/../config/database_shared_hosting.php';
     require_once __DIR__ . '/../classes/Crawler.php';
     require_once __DIR__ . '/../classes/SEOAnalyzer.php';
     

@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // Incluir dependências
-require_once '../config/database.php';
+require_once '../config/database_shared_hosting.php';
 
 try {
     // Ler dados JSON da requisição
