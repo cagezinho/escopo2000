@@ -16,13 +16,23 @@ Script **TUDO-EM-UM** para detectar e baixar dados do EscopoSEO diretamente de p
 
 ## 🛠️ Como Usar (SUPER SIMPLES!)
 
-### **✨ Uso Básico - 3 Passos:**
+### **✨ DUPLO USO - Browser E Screaming Frog:**
 
+#### **📱 BROWSER (3 Passos):**
 1. **📋 Copie** todo o código do arquivo `escopo_downloader_completo.js`
 2. **📄 Abra** uma página com dados do EscopoSEO
 3. **🖥️ Cole** no console do browser (F12 → Console → Colar → Enter)
 
 **PRONTO!** O download acontece automaticamente! 🎉
+
+#### **🕷️ SCREAMING FROG (5 Passos):**
+1. **📋 Copie** todo o código do arquivo `escopo_downloader_completo.js`
+2. **⚙️ Abra** Screaming Frog → Configuration → Custom → Extraction
+3. **➕ Clique** em "Add" → "JavaScript"
+4. **📝 Configure**: Nome: "EscopoSEO Auto Downloader" → Cole o código
+5. **🚀 Execute** o crawl - dados extraídos automaticamente!
+
+**RESULTADO:** Dados aparecem na aba Custom → JavaScript 📊
 
 ### **⚙️ Configuração (Opcional):**
 
@@ -102,6 +112,36 @@ EscopoAutoDownloader.getConfig()
 - Título e description
 - Informações do domínio
 - Timestamp da extração
+
+## 📁 Onde os Dados São Salvos
+
+### **📍 Por Ambiente:**
+
+#### **📱 BROWSER:**
+Os arquivos CSV são salvos na **pasta Downloads padrão** do navegador:
+
+| Sistema | Caminho Típico |
+|---------|----------------|
+| **Windows** | `C:\Users\[SEU_USUARIO]\Downloads\` |
+| **Mac** | `/Users/[SEU_USUARIO]/Downloads/` |
+| **Linux** | `/home/[SEU_USUARIO]/Downloads/` |
+
+**🔍 Como encontrar:**
+- **Windows**: `Win + R` → digite `downloads` → Enter
+- **Mac**: `Cmd + Space` → digite "downloads" → Enter
+- **Qualquer SO**: Configurações do navegador → Downloads
+
+#### **🕷️ SCREAMING FROG:**
+Os dados ficam **dentro do Screaming Frog** na aba Custom → JavaScript:
+
+1. **📊 Ver dados**: Aba Custom → JavaScript → Nome do seu extrator
+2. **💾 Exportar**: Data → Export → Custom → JavaScript → CSV/Excel
+3. **📁 Local da exportação**: Pasta escolhida no diálogo de salvamento
+
+### **⚙️ Configurar pasta personalizada (Browser):**
+- **Chrome**: Configurações → Avançado → Downloads → Local
+- **Firefox**: Configurações → Geral → Downloads → Salvar arquivos em
+- **Edge**: Configurações → Downloads → Local
 
 ## 📁 Formato dos Arquivos
 

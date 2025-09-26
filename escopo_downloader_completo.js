@@ -1,13 +1,22 @@
 /**
- * 🚀 EscopoSEO Auto Downloader - Versão Completa
+ * 🚀 EscopoSEO Auto Downloader - Versão COMPLETA
  * 
- * COMO USAR (igual ao exemplo do SAPO):
+ * ✨ FUNCIONA EM 2 AMBIENTES:
+ * 
+ * 📱 BROWSER (Chrome, Firefox, Edge):
  * 1. Copie todo este código
- * 2. Cole no console da página com dados do EscopoSEO
+ * 2. Cole no console da página com dados do EscopoSEO (F12 → Console)
  * 3. Pressione Enter
  * 4. O download acontece automaticamente!
  * 
- * Ou execute manualmente: downloadEscopoData()
+ * 🕷️ SCREAMING FROG SEO SPIDER:
+ * 1. Abra Configuration → Custom → Extraction
+ * 2. Add → JavaScript
+ * 3. Cole este código completo
+ * 4. Nome: "EscopoSEO Auto Downloader"
+ * 5. Execute o crawl - dados são extraídos automaticamente!
+ * 
+ * 🎯 Execute manualmente: downloadEscopoData()
  */
 
 // =============================================================================
@@ -23,6 +32,22 @@ const CONFIG = {
     FILENAME_PREFIX: "EscopoSEO",  // Prefixo dos arquivos
     INCLUDE_TIMESTAMP: true,       // Incluir data/hora no nome
     
+    // 📁 LOCAL DO DOWNLOAD
+    // 📱 BROWSER: Pasta Downloads do navegador
+    //    Windows: C:\Users\[USUARIO]\Downloads\
+    //    Mac: /Users/[USUARIO]/Downloads/
+    //    Linux: /home/[USUARIO]/Downloads/
+    // 🕷️ SCREAMING FROG: Dados ficam na aba Custom → JavaScript
+    //    Exportar via: Data → Export → Custom → JavaScript
+    
+    // Configurações específicas do Screaming Frog
+    SCREAMING_FROG: {
+        ENABLED: true,             // Habilitar modo Screaming Frog
+        AUTO_EXPORT: true,         // Exportar automaticamente (quando possível)
+        INCLUDE_RAW_DATA: true,    // Incluir dados brutos na análise
+        COMPRESS_OUTPUT: false     // Comprimir saída JSON
+    },
+    
     // Debug (true = mostrar logs, false = silencioso)
     DEBUG: true,
     
@@ -32,20 +57,51 @@ const CONFIG = {
 };
 
 // =============================================================================
-// 🔍 DETECTOR DE DADOS ESCOPO
+// 🔍 DETECTOR DE AMBIENTE E DADOS
 // =============================================================================
+
+// Detecta se estamos rodando no Screaming Frog ou Browser
+const ambiente = {
+    // Verifica se é Screaming Frog
+    isScreamingFrog() {
+        return typeof seoSpider !== 'undefined' && 
+               typeof seoSpider.data === 'function';
+    },
+    
+    // Verifica se é Browser
+    isBrowser() {
+        return typeof window !== 'undefined' && 
+               typeof document !== 'undefined' && 
+               !this.isScreamingFrog();
+    },
+    
+    // Obtém o tipo de ambiente
+    getTipo() {
+        if (this.isScreamingFrog()) return 'screaming-frog';
+        if (this.isBrowser()) return 'browser';
+        return 'desconhecido';
+    }
+};
 
 const detector = {
     // Verifica se há dados do EscopoSEO na página
     temDadosEscopo() {
+        // No Screaming Frog, sempre tenta extrair dados da página atual
+        if (ambiente.isScreamingFrog()) {
+            return true; // Sempre processa no SF
+        }
+        
+        // No browser, verifica indicadores específicos
         return this.temDadosLocalStorage() || 
                this.temDadosDOM() || 
                this.temTabelasSEO() ||
                this.temIndicadoresScreamingFrog();
     },
 
-    // Verifica localStorage
+    // Verifica localStorage (apenas no browser)
     temDadosLocalStorage() {
+        if (!ambiente.isBrowser()) return false;
+        
         try {
             const keys = Object.keys(localStorage);
             return keys.some(key => 
@@ -115,7 +171,8 @@ const extrator = {
         dados.analyses = [
             ...this.extrairLocalStorage(),
             ...this.extrairDOM(),
-            ...this.extrairTabelas()
+            ...this.extrairTabelas(),
+            ...this.extrairScreamingFrog()
         ];
 
         if (CONFIG.DEBUG) {
@@ -125,8 +182,10 @@ const extrator = {
         return dados;
     },
 
-    // Extrai dados do localStorage
+    // Extrai dados do localStorage (apenas browser)
     extrairLocalStorage() {
+        if (!ambiente.isBrowser()) return [];
+        
         const analyses = [];
         try {
             const keys = Object.keys(localStorage);
@@ -228,6 +287,100 @@ const extrator = {
             }
         });
 
+        return analyses;
+    },
+
+    // Extrai dados específicos do Screaming Frog
+    extrairScreamingFrog() {
+        if (!ambiente.isScreamingFrog()) return [];
+        
+        const analyses = [];
+        
+        try {
+            // Dados básicos da página atual no Screaming Frog
+            const dadosBasicos = {
+                fonte: 'screaming-frog',
+                url: typeof window !== 'undefined' ? window.location.href : 'N/A',
+                timestamp: this.formatarData(new Date()),
+                dados: {}
+            };
+
+            // Extrai dados do HTML disponível
+            if (typeof document !== 'undefined') {
+                // Title
+                dadosBasicos.dados.title = document.title || '';
+                
+                // Meta description
+                const metaDesc = document.querySelector('meta[name="description"]');
+                dadosBasicos.dados.meta_description = metaDesc ? metaDesc.getAttribute('content') : '';
+                
+                // Headings
+                const h1s = Array.from(document.querySelectorAll('h1')).map(h => h.innerText);
+                const h2s = Array.from(document.querySelectorAll('h2')).map(h => h.innerText);
+                dadosBasicos.dados.headings = { h1: h1s, h2: h2s };
+                
+                // Links
+                const links = Array.from(document.querySelectorAll('a[href]')).slice(0, 10).map(a => ({
+                    href: a.href,
+                    text: a.innerText.substring(0, 100)
+                }));
+                dadosBasicos.dados.links = links;
+                
+                // Images
+                const images = Array.from(document.querySelectorAll('img')).slice(0, 5).map(img => ({
+                    src: img.src,
+                    alt: img.alt || ''
+                }));
+                dadosBasicos.dados.images = images;
+
+                // Structured Data (JSON-LD)
+                const jsonLdScripts = Array.from(document.querySelectorAll('script[type="application/ld+json"]'));
+                const structuredData = [];
+                jsonLdScripts.forEach(script => {
+                    try {
+                        const data = JSON.parse(script.innerText);
+                        structuredData.push(data);
+                    } catch (e) {
+                        // JSON inválido, ignora
+                    }
+                });
+                dadosBasicos.dados.structured_data = structuredData;
+                
+                // Meta tags importantes
+                const metaTags = {};
+                const metaSelectors = [
+                    'meta[name="robots"]',
+                    'meta[name="viewport"]',
+                    'link[rel="canonical"]',
+                    'meta[property^="og:"]',
+                    'meta[name^="twitter:"]'
+                ];
+                
+                metaSelectors.forEach(selector => {
+                    const elements = document.querySelectorAll(selector);
+                    elements.forEach(el => {
+                        const name = el.getAttribute('name') || el.getAttribute('property') || el.getAttribute('rel');
+                        const content = el.getAttribute('content') || el.getAttribute('href');
+                        if (name && content) {
+                            metaTags[name] = content;
+                        }
+                    });
+                });
+                dadosBasicos.dados.meta_tags = metaTags;
+            }
+            
+            analyses.push(dadosBasicos);
+            
+            if (CONFIG.DEBUG) {
+                console.log("🕷️ Dados extraídos do Screaming Frog:", dadosBasicos);
+            }
+            
+        } catch (error) {
+            if (CONFIG.DEBUG) {
+                console.error("❌ Erro ao extrair dados do Screaming Frog:", error);
+            }
+        }
+        
         return analyses;
     },
 
@@ -378,6 +531,8 @@ const downloadManager = {
                 
                 if (CONFIG.DEBUG) {
                     console.log(`✅ Download realizado: ${nomeArquivo}`);
+                    console.log(`📁 Arquivo salvo em: Pasta Downloads do seu navegador`);
+                    console.log(`🔍 Caminho típico: C:\\Users\\[USUARIO]\\Downloads\\${nomeArquivo}`);
                 }
                 return true;
             }
@@ -475,20 +630,31 @@ const apiClient = {
 // =============================================================================
 
 async function downloadEscopoData() {
+    const tipoAmbiente = ambiente.getTipo();
+    
     if (CONFIG.DEBUG) {
-        console.log("🚀 EscopoSEO Auto Downloader iniciado...");
+        console.log(`🚀 EscopoSEO Auto Downloader iniciado... (${tipoAmbiente})`);
     }
 
     try {
         // 1. Verifica se há dados para extrair
         if (!detector.temDadosEscopo()) {
-            const msg = "❌ Nenhum dado do EscopoSEO encontrado nesta página";
+            const msg = `❌ Nenhum dado do EscopoSEO encontrado nesta página (${tipoAmbiente})`;
             if (CONFIG.DEBUG) console.log(msg);
+            
+            // No Screaming Frog, ainda retorna dados básicos
+            if (ambiente.isScreamingFrog()) {
+                const dadosBasicos = extrator.extrairScreamingFrog();
+                if (dadosBasicos.length > 0) {
+                    return seoSpider.data(JSON.stringify(dadosBasicos[0]));
+                }
+            }
+            
             return { sucesso: false, mensagem: msg };
         }
 
         if (CONFIG.DEBUG) {
-            console.log("✅ Dados do EscopoSEO detectados!");
+            console.log(`✅ Dados do EscopoSEO detectados! (${tipoAmbiente})`);
         }
 
         // 2. Extrai os dados
@@ -507,34 +673,63 @@ async function downloadEscopoData() {
             console.log("📄 CSV gerado com sucesso");
         }
 
-        // 4. Faz o download
-        const nomeArquivo = downloadManager.gerarNomeArquivo(dados.domain, dados.timestamp);
-        const downloadSucesso = downloadManager.baixarCSV(csvContent, nomeArquivo);
+        // 4. Processamento específico por ambiente
+        if (ambiente.isScreamingFrog()) {
+            // No Screaming Frog, retorna dados via seoSpider.data()
+            const dadosParaSF = {
+                ambiente: 'screaming-frog',
+                url: dados.url,
+                timestamp: dados.timestamp,
+                resumo: `${dados.analyses.length} análises extraídas`,
+                dados_completos: CONFIG.SCREAMING_FROG.INCLUDE_RAW_DATA ? dados : 'Dados removidos para economia de espaço'
+            };
+            
+            if (CONFIG.DEBUG) {
+                console.log("🕷️ Retornando dados para Screaming Frog:", dadosParaSF);
+            }
+            
+            // Salva backup se possível
+            try {
+                downloadManager.salvarBackup(dados);
+            } catch (e) {
+                // localStorage pode não estar disponível no SF
+            }
+            
+            return seoSpider.data(CONFIG.SCREAMING_FROG.COMPRESS_OUTPUT ? 
+                JSON.stringify(dadosParaSF) : 
+                JSON.stringify(dadosParaSF, null, 2)
+            );
+        } 
+        else {
+            // No browser, faz download normal
+            const nomeArquivo = downloadManager.gerarNomeArquivo(dados.domain, dados.timestamp);
+            const downloadSucesso = downloadManager.baixarCSV(csvContent, nomeArquivo);
 
-        // 5. Salva backup
-        const chaveBackup = downloadManager.salvarBackup(dados);
+            // Salva backup
+            const chaveBackup = downloadManager.salvarBackup(dados);
 
-        // 6. Envia para API (se configurado)
-        let respostaAPI = null;
-        if (CONFIG.SEND_TO_API) {
-            if (CONFIG.DEBUG) console.log("📡 Enviando para API...");
-            respostaAPI = await apiClient.enviarParaAPI(dados);
+            // Envia para API (se configurado)
+            let respostaAPI = null;
+            if (CONFIG.SEND_TO_API) {
+                if (CONFIG.DEBUG) console.log("📡 Enviando para API...");
+                respostaAPI = await apiClient.enviarParaAPI(dados);
+            }
+
+            if (CONFIG.DEBUG) {
+                console.log("🎉 Processo concluído!");
+            }
+
+            return {
+                sucesso: true,
+                ambiente: 'browser',
+                dados: dados,
+                csvContent: csvContent,
+                nomeArquivo: nomeArquivo,
+                downloadSucesso: downloadSucesso,
+                chaveBackup: chaveBackup,
+                respostaAPI: respostaAPI
+            };
         }
-
-        // 7. Resultado final
-        if (CONFIG.DEBUG) {
-            console.log("🎉 Processo concluído!");
-        }
-
-        return {
-            sucesso: true,
-            dados: dados,
-            csvContent: csvContent,
-            nomeArquivo: nomeArquivo,
-            downloadSucesso: downloadSucesso,
-            chaveBackup: chaveBackup,
-            respostaAPI: respostaAPI
-        };
 
     } catch (error) {
         console.error("❌ Erro durante execução:", error);
@@ -543,28 +738,58 @@ async function downloadEscopoData() {
 }
 
 // =============================================================================
+// 🕷️ FUNÇÃO ESPECÍFICA DO SCREAMING FROG
+// =============================================================================
+
+// Função extract() obrigatória para o Screaming Frog
+function extract() {
+    try {
+        if (CONFIG.DEBUG) {
+            console.log("🕷️ Função extract() do Screaming Frog executada");
+        }
+        
+        // Executa a extração de dados
+        return downloadEscopoData();
+        
+    } catch (error) {
+        console.error("❌ Erro na função extract():", error);
+        
+        // Retorna erro formatado para o Screaming Frog
+        return seoSpider.data(JSON.stringify({
+            erro: "ERRO_EXTRACT",
+            detalhes: error.message,
+            url: typeof window !== 'undefined' ? window.location.href : 'N/A',
+            timestamp: new Date().toISOString()
+        }));
+    }
+}
+
+// =============================================================================
 // 🚀 AUTO-EXECUÇÃO E FUNÇÕES GLOBAIS
 // =============================================================================
 
-// Torna função global para uso manual
-window.downloadEscopoData = downloadEscopoData;
+// Disponibiliza funções globais apenas no browser
+if (ambiente.isBrowser()) {
+    // Torna função global para uso manual
+    window.downloadEscopoData = downloadEscopoData;
 
-// Função para configurar
-window.configurarEscopo = function(novasConfigs) {
-    Object.assign(CONFIG, novasConfigs);
-    if (CONFIG.DEBUG) {
-        console.log("⚙️ Configurações atualizadas:", CONFIG);
-    }
-};
+    // Função para configurar
+    window.configurarEscopo = function(novasConfigs) {
+        Object.assign(CONFIG, novasConfigs);
+        if (CONFIG.DEBUG) {
+            console.log("⚙️ Configurações atualizadas:", CONFIG);
+        }
+    };
 
-// Função para ver configurações
-window.verConfiguracoes = function() {
-    console.log("🔧 Configurações atuais:", CONFIG);
-    return CONFIG;
-};
+    // Função para ver configurações
+    window.verConfiguracoes = function() {
+        console.log("🔧 Configurações atuais:", CONFIG);
+        return CONFIG;
+    };
+}
 
-// Auto-execução se habilitado
-if (CONFIG.AUTO_DOWNLOAD) {
+// Auto-execução apenas no browser (no Screaming Frog é via extract())
+if (CONFIG.AUTO_DOWNLOAD && ambiente.isBrowser()) {
     // Aguarda página carregar
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', downloadEscopoData);
@@ -575,20 +800,32 @@ if (CONFIG.AUTO_DOWNLOAD) {
 
 // Log de inicialização
 if (CONFIG.DEBUG) {
-    console.log(`
-🚀 EscopoSEO Auto Downloader CARREGADO!
-
-📋 Como usar:
+    const tipoAmbiente = ambiente.getTipo();
+    const versaoDetalhes = tipoAmbiente === 'screaming-frog' ? 
+        `🕷️ SCREAMING FROG MODE
+   • Função extract() ativa
+   • Dados retornados via seoSpider.data()
+   • Exportar via: Data → Export → Custom → JavaScript` :
+        `📱 BROWSER MODE
    • downloadEscopoData() - Executar download
    • configurarEscopo({}) - Alterar configurações  
-   • verConfiguracoes() - Ver configurações atuais
+   • verConfiguracoes() - Ver configurações atuais`;
+
+    console.log(`
+🚀 EscopoSEO Auto Downloader CARREGADO! (${tipoAmbiente})
+
+${versaoDetalhes}
 
 🔧 Status:
    • Auto Download: ${CONFIG.AUTO_DOWNLOAD ? '✅ ATIVO' : '❌ INATIVO'}
    • Debug: ${CONFIG.DEBUG ? '✅ ATIVO' : '❌ INATIVO'}
    • API: ${CONFIG.SEND_TO_API ? '✅ ATIVO' : '❌ INATIVO'}
    • Token: ${CONFIG.TOKEN ? '✅ CONFIGURADO' : '❌ NÃO CONFIGURADO'}
+   • Screaming Frog: ${CONFIG.SCREAMING_FROG.ENABLED ? '✅ HABILITADO' : '❌ DESABILITADO'}
 
-🎯 Para usar: Copie e cole este código no console de qualquer página com dados do EscopoSEO!
+🎯 COMO USAR:
+${tipoAmbiente === 'browser' ? 
+    '   📱 BROWSER: Cole no console (F12) de páginas com dados EscopoSEO' : 
+    '   🕷️ SCREAMING FROG: Configuration → Custom → Extraction → JavaScript'}
 `);
 }
