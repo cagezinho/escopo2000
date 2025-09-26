@@ -315,12 +315,17 @@ Você é um especialista sênior em SEO técnico e conteúdo. Receberá o HTML b
 
 function extract() {
     try {
-        // Validar configuração
+        // Validar configuração - se não tiver API key, fazer análise básica
         if (!CONFIG.GEMINI_API_KEY || CONFIG.GEMINI_API_KEY === "SUA_CHAVE_GEMINI_AQUI") {
-            return JSON.stringify({
-                erro: "CONFIGURE_SUA_CHAVE_GEMINI",
-                instrucoes: "Edite CONFIG.GEMINI_API_KEY no início do script"
-            });
+            logError("API Key não configurada - executando análise básica local");
+            
+            // Coletar dados básicos da página
+            const pageData = collectPageData();
+            
+            // Análise básica sem IA (para teste)
+            const basicAnalysis = performBasicAnalysis(pageData);
+            
+            return seoSpider.data(JSON.stringify(basicAnalysis));
         }
 
         // Coletar dados básicos da página
@@ -332,16 +337,132 @@ function extract() {
         // Enviar para Gemini API
         const analysis = analyzeWithGemini(htmlContent, pageData);
         
-        return analysis;
+        // Retornar usando seoSpider.data() para o Screaming Frog
+        return seoSpider.data(analysis);
         
     } catch (error) {
         logError("Erro na função extract:", error);
-        return JSON.stringify({
+        const errorData = {
             erro: "ERRO_EXTRACAO",
             detalhes: error.message,
             url: window.location.href
-        });
+        };
+        return seoSpider.data(JSON.stringify(errorData));
     }
+}
+
+// =============================================================================
+// ANÁLISE BÁSICA (SEM IA) - PARA TESTE
+// =============================================================================
+
+function performBasicAnalysis(pageData) {
+    const issues = {
+        seo_tecnico: [],
+        seo_conteudo: [],
+        seo_ia_sge: []
+    };
+    
+    let seoScore = 100;
+    let contentScore = 100;
+    let aiScore = 100;
+    
+    // Análise SEO Técnico
+    if (!pageData.title || pageData.title.length === 0) {
+        issues.seo_tecnico.push("Título ausente - adicionar tag <title>");
+        seoScore -= 20;
+    } else if (pageData.title.length < 30) {
+        issues.seo_tecnico.push(`Título muito curto (${pageData.title.length} chars) - expandir para 30-60`);
+        seoScore -= 10;
+    } else if (pageData.title.length > 60) {
+        issues.seo_tecnico.push(`Título muito longo (${pageData.title.length} chars) - reduzir para 30-60`);
+        seoScore -= 10;
+    }
+    
+    if (!pageData.metaDescription || pageData.metaDescription.length === 0) {
+        issues.seo_tecnico.push("Meta description ausente - adicionar entre 150-160 caracteres");
+        seoScore -= 15;
+    } else if (pageData.metaDescription.length < 120) {
+        issues.seo_tecnico.push(`Meta description curta (${pageData.metaDescription.length} chars) - expandir para 150-160`);
+        seoScore -= 10;
+    }
+    
+    if (!pageData.h1 || pageData.h1.length === 0) {
+        issues.seo_tecnico.push("H1 ausente - adicionar heading principal único");
+        seoScore -= 15;
+    }
+    
+    if (pageData.headings.h1.count > 1) {
+        issues.seo_tecnico.push(`Múltiplos H1 (${pageData.headings.h1.count}) - usar apenas um H1 por página`);
+        seoScore -= 10;
+    }
+    
+    if (!pageData.canonical || pageData.canonical.length === 0) {
+        issues.seo_tecnico.push("Canonical ausente - adicionar para evitar conteúdo duplicado");
+        seoScore -= 5;
+    }
+    
+    if (pageData.images.withoutAlt > 0) {
+        issues.seo_tecnico.push(`${pageData.images.withoutAlt} imagens sem ALT text - adicionar para acessibilidade`);
+        seoScore -= Math.min(15, pageData.images.withoutAlt * 3);
+    }
+    
+    // Análise de Conteúdo
+    if (pageData.wordCount < 300) {
+        issues.seo_conteudo.push(`Conteúdo insuficiente (${pageData.wordCount} palavras) - expandir para 800+`);
+        contentScore -= 20;
+    }
+    
+    if (pageData.headings.h2.count === 0) {
+        issues.seo_conteudo.push("Sem subtítulos H2 - adicionar para melhor estrutura");
+        contentScore -= 10;
+    }
+    
+    if (pageData.links.internal < 3) {
+        issues.seo_conteudo.push(`Poucos links internos (${pageData.links.internal}) - adicionar para melhor navegação`);
+        contentScore -= 10;
+    }
+    
+    // Análise para IA/SGE
+    if (pageData.structuredData.length === 0) {
+        issues.seo_ia_sge.push("Sem dados estruturados - implementar schema.org relevante");
+        aiScore -= 20;
+    }
+    
+    if (!pageData.title.toLowerCase().includes('como') && 
+        !pageData.title.toLowerCase().includes('o que') &&
+        !pageData.h1.toLowerCase().includes('como')) {
+        issues.seo_ia_sge.push("Página não responde perguntas diretas - otimizar para respostas de IA");
+        aiScore -= 15;
+    }
+    
+    if (pageData.headings.h2.count < 3) {
+        issues.seo_ia_sge.push("Estrutura inadequada para featured snippets - adicionar mais subtítulos");
+        aiScore -= 10;
+    }
+    
+    // Determinar prioridade
+    const avgScore = Math.round((seoScore + contentScore + aiScore) / 3);
+    let priority = "Baixa";
+    if (avgScore < 50) priority = "Alta";
+    else if (avgScore < 70) priority = "Média";
+    
+    return {
+        url_analisada: pageData.url,
+        seo_tecnico: issues.seo_tecnico,
+        seo_conteudo: issues.seo_conteudo,
+        seo_ia_sge: issues.seo_ia_sge,
+        prioridade_geral: priority,
+        score_seo: Math.max(0, seoScore),
+        score_conteudo: Math.max(0, contentScore),
+        score_ia: Math.max(0, aiScore),
+        resumo_executivo: `Análise básica local: ${issues.seo_tecnico.length + issues.seo_conteudo.length + issues.seo_ia_sge.length} problemas identificados`,
+        metadata: {
+            analyzed_at: new Date().toISOString(),
+            analysis_type: "basic_local",
+            word_count: pageData.wordCount,
+            page_title: pageData.title
+        }
+    };
 }
 
 // =============================================================================
