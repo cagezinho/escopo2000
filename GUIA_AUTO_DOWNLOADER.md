@@ -1,8 +1,8 @@
-# 🚀 EscopoSEO Auto Downloader
+# 🚀 EscopoSEO Auto Downloader - Versão Completa
 
 ## 📋 Descrição
 
-Script automatizado para detectar e baixar dados do EscopoSEO diretamente de páginas web. Funciona de forma similar ao exemplo que você forneceu, mas focado na extração e download de relatórios CSV do seu sistema de análise SEO.
+Script **TUDO-EM-UM** para detectar e baixar dados do EscopoSEO diretamente de páginas web. Funciona igual ao exemplo do SAPO - apenas **COPIAR e COLAR** no console!
 
 ## ✨ Funcionalidades
 
@@ -14,51 +14,42 @@ Script automatizado para detectar e baixar dados do EscopoSEO diretamente de pá
 - ✅ **Configurável** - Múltiplas opções de configuração
 - ✅ **Debug Mode** - Logs detalhados para troubleshooting
 
-## 🛠️ Como Usar
+## 🛠️ Como Usar (SUPER SIMPLES!)
 
-### 1. **Configuração Básica**
+### **✨ Uso Básico - 3 Passos:**
+
+1. **📋 Copie** todo o código do arquivo `escopo_downloader_completo.js`
+2. **📄 Abra** uma página com dados do EscopoSEO
+3. **🖥️ Cole** no console do browser (F12 → Console → Colar → Enter)
+
+**PRONTO!** O download acontece automaticamente! 🎉
+
+### **⚙️ Configuração (Opcional):**
+
+Antes de colar, edite as configurações no início do arquivo:
 
 ```javascript
-// Edite as configurações no início do arquivo
 const CONFIG = {
-    ESCOPO_TOKEN: "seu_token_aqui", // Opcional
-    AUTO_DOWNLOAD: true,            // Download automático
-    FILENAME_PREFIX: "EscopoSEO",   // Prefixo dos arquivos
-    DEBUG: true                     // Mostrar logs
+    TOKEN: "",                     // Seu token (opcional)
+    AUTO_DOWNLOAD: true,           // Download automático
+    FILENAME_PREFIX: "EscopoSEO",  // Prefixo dos arquivos
+    DEBUG: true                    // Mostrar logs (true/false)
 };
 ```
 
-### 2. **Carregamento do Script**
+### **🎯 Execução Manual:**
 
-#### **Opção A: Console do Browser**
-1. Abra a página com dados do EscopoSEO
-2. Pressione `F12` para abrir DevTools
-3. Vá na aba `Console`
-4. Cole todo o conteúdo do arquivo `escopo_auto_downloader.js`
-5. Pressione `Enter`
+Depois de colar o código, use no console:
 
-#### **Opção B: Bookmarklet**
-1. Crie um novo bookmark
-2. Cole o script minificado como URL do bookmark
-3. Clique no bookmark quando estiver na página com dados
-
-#### **Opção C: Extensão de Browser**
-1. Use uma extensão como "User JavaScript and CSS"
-2. Configure para carregar o script automaticamente em páginas específicas
-
-### 3. **Execução**
-
-#### **Automática:**
-- O script roda automaticamente quando detecta dados do EscopoSEO
-- Download é feito automaticamente se `AUTO_DOWNLOAD: true`
-
-#### **Manual:**
 ```javascript
-// Executar download manual
+// Executar download
 downloadEscopoData()
 
-// Ou usando o objeto principal
-EscopoAutoDownloader.manualRun()
+// Configurar durante execução
+configurarEscopo({ AUTO_DOWNLOAD: false })
+
+// Ver configurações
+verConfiguracoes()
 ```
 
 ## ⚙️ Configurações Avançadas
