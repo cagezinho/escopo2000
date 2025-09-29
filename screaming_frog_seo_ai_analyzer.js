@@ -19,7 +19,7 @@
 
 const CONFIG = {
     // SUA CHAVE DA API GEMINI (obrigatório)
-    GEMINI_API_KEY: "SUA_CHAVE_GEMINI_AQUI", // Substitua pela sua chave real
+    GEMINI_API_KEY: "AIzaSyCFxI43LRVSKIICxxGZHLBTKPrmYO2YNMo", // Substitua pela sua chave real
     
     // Configurações da API
     GEMINI_MODEL: "gemini-2.0-flash", // ou "gemini-1.5-pro" para análises mais profundas
@@ -42,7 +42,7 @@ const CONFIG = {
         
         // Configurações de download
         CUSTOM_DOWNLOAD_FOLDER: true, // Usar pasta personalizada
-        DOWNLOAD_FOLDER: "C:/Users/nicol/Desktop/EscopoSEO_Reports/", // Pasta específica
+        DOWNLOAD_FOLDER: "C:/Users/LENOVO/Desktop/teste", // Pasta específica
         CREATE_SUBFOLDERS: true, // Criar subpastas por data
         FILENAME_PREFIX: "EscopoSEO", // Prefixo dos arquivos
         INCLUDE_TIMESTAMP: true // Incluir data no nome do arquivo
